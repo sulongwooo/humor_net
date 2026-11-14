@@ -8,9 +8,97 @@ const os = require('os');
 const PORT = 8000;
 const HOST = 'localhost';
 
+/* ---------- Visitor counter (unique browsers, persisted to disk) ---------- */
+
+const VIEWS_FILE = path.join(__dirname, '.views.json');
+const VISITOR_ID_RE = /^[A-Za-z0-9-]{6,80}$/;
+
+// Displayed count starts from this offset, then grows with real unique visitors
+const VIEWS_BASE = 100;
+
+function loadViews() {
+    try {
+        const parsed = JSON.parse(fs.readFileSync(VIEWS_FILE, 'utf8'));
+        if (parsed && parsed.visitors && typeof parsed.visitors === 'object') return parsed;
+    } catch (err) {
+        // First run (no file yet) or unreadable file: start from an empty registry
+    }
+    return { visitors: {} };
+}
+
+const views = loadViews();
+
+function saveViews() {
+    // Write to a temp file then rename, so a crash can't leave a half-written counter
+    const tmpFile = VIEWS_FILE + '.tmp';
+    fs.writeFileSync(tmpFile, JSON.stringify(views));
+    fs.renameSync(tmpFile, VIEWS_FILE);
+}
+
+function countViews() {
+    return VIEWS_BASE + Object.keys(views.visitors).length;
+}
+
+function sendJson(res, status, payload) {
+    res.writeHead(status, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store'
+    });
+    res.end(JSON.stringify(payload));
+}
+
+// POST /api/views  { visitor: "<id>" } -> { count }
+// Counting is idempotent per visitor id, so reloads and extra tabs don't inflate it.
+function handleViews(req, res) {
+    if (req.method !== 'POST') {
+        res.setHeader('Allow', 'POST');
+        sendJson(res, 405, { error: 'Method not allowed' });
+        return;
+    }
+
+    let body = '';
+    req.on('data', (chunk) => {
+        body += chunk;
+        if (body.length > 2048) req.destroy();
+    });
+
+    req.on('end', () => {
+        let visitor = '';
+        try {
+            visitor = String(JSON.parse(body || '{}').visitor || '');
+        } catch (err) {
+            sendJson(res, 400, { error: 'Invalid JSON body' });
+            return;
+        }
+
+        if (!VISITOR_ID_RE.test(visitor)) {
+            sendJson(res, 400, { error: 'Invalid visitor id' });
+            return;
+        }
+
+        if (!views.visitors[visitor]) {
+            views.visitors[visitor] = 1;
+            try {
+                saveViews();
+            } catch (err) {
+                console.error('Failed to persist visitor count:', err.message);
+            }
+        }
+
+        sendJson(res, 200, { count: countViews() });
+    });
+}
+
 const server = http.createServer((req, res) => {
+    const pathname = req.url.split('?')[0];
+
+    if (pathname === '/api/views') {
+        handleViews(req, res);
+        return;
+    }
+
     // Default to index.html
-    let filePath = req.url === '/' ? '/index.html' : req.url;
+    let filePath = pathname === '/' ? '/index.html' : pathname;
     filePath = path.join(__dirname, filePath);
     
     // Get file extension

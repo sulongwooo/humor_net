@@ -647,6 +647,62 @@ audioBtn.addEventListener('click', () => {
     }
 });
 
+/* ---------- Visitor counter (server-side, unique browsers) ---------- */
+
+const VIEWER_ID_KEY = 'jokeAppVisitorId';
+const viewsTag = document.getElementById('views-tag');
+
+let visitorsCount = null;   // null = counter API unavailable (e.g. static hosting)
+let viewsLoading = true;
+
+function newVisitorId() {
+    if (window.crypto && typeof crypto.randomUUID === 'function') {
+        return 'v' + crypto.randomUUID();
+    }
+    return 'v' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function getVisitorId() {
+    let id = localStorage.getItem(VIEWER_ID_KEY);
+    if (!id) {
+        id = newVisitorId();
+        localStorage.setItem(VIEWER_ID_KEY, id);
+    }
+    return id;
+}
+
+function renderViewsLabel() {
+    if (viewsLoading) {
+        viewsTag.textContent = '···';
+    } else if (visitorsCount === null) {
+        viewsTag.textContent = t('viewsOffline');
+    } else {
+        viewsTag.textContent = visitorsCount.toLocaleString() + ' ' + t('viewsUnit');
+    }
+}
+
+async function syncViews() {
+    try {
+        const response = await fetch('/api/views', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ visitor: getVisitorId() })
+        });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        if (typeof data.count !== 'number') throw new Error('bad payload');
+        visitorsCount = data.count;
+    } catch (error) {
+        // No counter backend (static hosting): show OFFLINE rather than a made-up number
+        visitorsCount = null;
+        console.warn('View counter unavailable:', error.message);
+    }
+    viewsLoading = false;
+    renderViewsLabel();
+}
+
+renderViewsLabel();
+
 /* ---------- Events ---------- */
 
 generateBtn.addEventListener('click', () => {
@@ -661,6 +717,8 @@ document.getElementById('lang-en').addEventListener('click', () => setLanguage('
 
 // Re-localize every dynamic part of the page when the language changes
 window.addEventListener('jokeapp:langchange', () => {
+    renderViewsLabel();
+
     if ((appState === 'ok' || appState === 'translating') && currentJoke) {
         // Re-render the joke itself (instant for EN, translated for ZH)
         rerenderForLanguage();
@@ -711,5 +769,6 @@ window.addEventListener('load', () => {
     tickClock();
     resizeCanvas();
     updatePortraitHint();
+    syncViews();
     getRandomJoke();
 });

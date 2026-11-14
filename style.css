@@ -370,6 +370,17 @@ body {
     user-select: none;
 }
 
+.statusbar-meta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.views-tag {
+    font-family: var(--font-mono);
+    white-space: nowrap;
+}
+
 .space-hint {
     color: rgba(204, 255, 0, 0.8);
     font-family: var(--font-mono);
@@ -537,6 +548,14 @@ body {
     }
 
     .char-tag {
+        display: none;
+    }
+
+    .statusbar {
+        justify-content: flex-end;
+    }
+
+    .statusbar-brand {
         display: none;
     }
 
