@@ -325,7 +325,187 @@ const clockEl = document.getElementById('status-clock');
 
 const API_URL = 'https://v2.jokeapi.dev/joke/Any';
 
-let currentJoke = null;      // normalized joke packet (always English source)
+// Local curated archive: cold jokes and famous humor anecdotes.
+// Each entry carries both languages so no machine translation is needed.
+const LOCAL_JOKE_RATIO = 0.3; // 30% local curated archive / 70% JokeAPI
+
+const LOCAL_JOKES = [
+    // ---------- Cold jokes ----------
+    {
+        id: 1,
+        category: 'COLD',
+        type: 'single',
+        zh: '一根火柴觉得头很痒，就挠了挠，结果把自己点着了。',
+        en: 'A matchstick felt itchy, scratched its head, and burst into flames.'
+    },
+    {
+        id: 2,
+        category: 'COLD',
+        type: 'twopart',
+        zh: { setup: '为什么数学书总是很忧郁？', delivery: '因为它有太多问题。' },
+        en: { setup: 'Why is a math book always sad?', delivery: 'Because it has too many problems.' }
+    },
+    {
+        id: 3,
+        category: 'COLD',
+        type: 'twopart',
+        zh: { setup: '为什么电脑感冒了？', delivery: '因为它开着太多窗口。' },
+        en: { setup: 'Why did the computer catch a cold?', delivery: 'It had too many windows open.' }
+    },
+    {
+        id: 4,
+        category: 'COLD',
+        type: 'twopart',
+        zh: { setup: '怎么把大象放进冰箱？', delivery: '打开门，把大象放进去，再关门。' },
+        en: { setup: 'How do you put an elephant in the fridge?', delivery: 'Open the door, put it in, close the door.' }
+    },
+    {
+        id: 5,
+        category: 'COLD',
+        type: 'twopart',
+        zh: { setup: '什么动物最没有方向感？', delivery: '麋鹿，因为它总是迷路。' },
+        en: { setup: 'Which animal has the worst sense of direction?', delivery: 'A reindeer — it is always lost.' }
+    },
+    {
+        id: 6,
+        category: 'COLD',
+        type: 'twopart',
+        zh: { setup: '企鹅为什么不怕冷？', delivery: '因为它天天穿燕尾服。' },
+        en: { setup: 'Why do penguins never feel cold?', delivery: 'They wear a tuxedo every day.' }
+    },
+    {
+        id: 7,
+        category: 'COLD',
+        type: 'twopart',
+        zh: { setup: '鱼为什么不上网？', delivery: '因为怕被网住。' },
+        en: { setup: 'Why do fish never use the internet?', delivery: 'They are afraid of getting caught in the net.' }
+    },
+    {
+        id: 8,
+        category: 'COLD',
+        type: 'single',
+        zh: '0 遇到 8，说：“胖就胖，还系什么腰带？”',
+        en: '0 met 8 and said: "If you are going to be fat, why wear a belt?"'
+    },
+    {
+        id: 9,
+        category: 'COLD',
+        type: 'twopart',
+        zh: { setup: '为什么程序员分不清万圣节和圣诞节？', delivery: '因为 Oct 31 == Dec 25。' },
+        en: { setup: 'Why can’t programmers tell Halloween from Christmas?', delivery: 'Because Oct 31 == Dec 25.' }
+    },
+    {
+        id: 10,
+        category: 'COLD',
+        type: 'single',
+        zh: '企鹅的膝盖藏在羽毛里，所以它摔倒时，没人知道它疼不疼。',
+        en: 'A penguin’s knees are hidden under its feathers, so when it falls, nobody knows if it hurts.'
+    },
+    {
+        id: 11,
+        category: 'COLD',
+        type: 'twopart',
+        zh: { setup: '什么水果最忙？', delivery: '芒果，因为它总在“忙”。' },
+        en: { setup: 'Which fruit is always busy?', delivery: 'A mango — it is always on the go.' }
+    },
+
+    // ---------- Celebrity humor ----------
+    {
+        id: 12,
+        category: 'CELEB',
+        type: 'twopart',
+        zh: {
+            setup: '一位外国女士想拜访钱钟书，他婉拒道：',
+            delivery: '“假如你吃了一个鸡蛋觉得不错，又何必认识那只下蛋的母鸡呢？”'
+        },
+        en: {
+            setup: 'A woman wanted to meet Qian Zhongshu. He politely declined:',
+            delivery: '"If you enjoy an egg, why do you need to meet the hen that laid it?"'
+        }
+    },
+    {
+        id: 13,
+        category: 'CELEB',
+        type: 'twopart',
+        zh: {
+            setup: '一位女士对萧伯纳说：',
+            delivery: '“如果你娶我，我们的孩子会有我的美貌和你的智慧。”萧伯纳回答：“如果他们继承了我的美貌和你的智慧呢？”'
+        },
+        en: {
+            setup: 'A woman told George Bernard Shaw:',
+            delivery: '"If you marry me, our children will have my beauty and your brains." Shaw replied: "What if they inherit my beauty and your brains?"'
+        }
+    },
+    {
+        id: 14,
+        category: 'CELEB',
+        type: 'twopart',
+        zh: {
+            setup: '一位女士对丘吉尔说：“如果你是我丈夫，我会在你的咖啡里下毒。”',
+            delivery: '丘吉尔回答：“如果你是我妻子，我会把它喝下去。”'
+        },
+        en: {
+            setup: 'A woman told Churchill: "If you were my husband, I would poison your coffee."',
+            delivery: 'Churchill replied: "If you were my wife, I would drink it."'
+        }
+    },
+    {
+        id: 15,
+        category: 'CELEB',
+        type: 'single',
+        zh: '马克·吐温说：“戒烟很容易，我已经戒过一千多次了。”',
+        en: 'Mark Twain said: "Quitting smoking is easy. I have done it thousands of times."'
+    },
+    {
+        id: 16,
+        category: 'CELEB',
+        type: 'twopart',
+        zh: {
+            setup: '王尔德过海关时，官员问：“有什么需要申报的吗？”',
+            delivery: '他回答：“除了我的天才，什么都没有。”'
+        },
+        en: {
+            setup: 'At customs, an officer asked Oscar Wilde: "Anything to declare?"',
+            delivery: 'He replied: "Nothing but my genius."'
+        }
+    },
+    {
+        id: 17,
+        category: 'CELEB',
+        type: 'single',
+        zh: '爱因斯坦说：“如果 A 代表成功，那么 A = X + Y + Z。X 是工作，Y 是休息，Z 是少说废话。”',
+        en: 'Einstein said: "If A is success, then A = X + Y + Z. X is work, Y is play, and Z is keeping your mouth shut."'
+    },
+    {
+        id: 18,
+        category: 'CELEB',
+        type: 'single',
+        zh: '格劳乔·马克思说：“我不想加入任何愿意接纳我当会员的俱乐部。”',
+        en: 'Groucho Marx said: "I refuse to join any club that would have me as a member."'
+    },
+    {
+        id: 19,
+        category: 'CELEB',
+        type: 'single',
+        zh: '林语堂说：“人生在世，还不是有时笑笑人家，有时给人家笑笑。”',
+        en: 'Lin Yutang said: "In this life, we sometimes laugh at others, and sometimes others laugh at us."'
+    },
+    {
+        id: 20,
+        category: 'CELEB',
+        type: 'twopart',
+        zh: {
+            setup: '萧伯纳给丘吉尔寄了两张戏票，附言：“带上一个朋友，如果你有的话。”',
+            delivery: '丘吉尔回信：“首演我去不了。第二晚我会去，如果还有第二晚的话。”'
+        },
+        en: {
+            setup: 'Shaw sent Churchill two theatre tickets with a note: "Bring a friend, if you have one."',
+            delivery: 'Churchill replied: "I cannot make the first night. I will come to the second night, if there is one."'
+        }
+    }
+];
+
+let currentJoke = null;      // normalized joke packet (API source or local bilingual entry)
 let appState = 'standby';    // standby | loading | ok | error
 let isLoading = false;
 let typewriterTimer = null;
@@ -382,8 +562,21 @@ async function translateToZh(text) {
     return translated;
 }
 
-// Build the localized display packet from the English source joke
+// Build the localized display packet (local entries are bilingual; API entries are translated)
 async function resolveDisplayPacket(joke, lang, seq) {
+    if (joke.local) {
+        const content = (lang === 'zh' ? joke.zh : joke.en) || joke.en || joke.zh;
+        if (typeof content === 'string') {
+            return Object.assign({}, joke, { type: 'single', setup: content, delivery: '', translated: true });
+        }
+        return Object.assign({}, joke, {
+            type: 'twopart',
+            setup: content.setup,
+            delivery: content.delivery || '',
+            translated: true
+        });
+    }
+
     if (lang !== 'zh') return joke;
 
     const tasks = [translateToZh(joke.setup)];
@@ -456,7 +649,9 @@ function normalizeJoke(data) {
             type: 'twopart',
             setup: data.setup,
             delivery: data.delivery,
-            hash: '#0x' + hexId + '_' + category
+            hash: '#0x' + hexId + '_' + category,
+            local: false,
+            source: 'JOKEAPI.V2'
         };
     }
 
@@ -464,7 +659,23 @@ function normalizeJoke(data) {
         type: 'single',
         setup: data.joke || data.setup + ' ' + (data.delivery || data.punchline || ''),
         delivery: '',
-        hash: '#0x' + hexId + '_' + category
+        hash: '#0x' + hexId + '_' + category,
+        local: false,
+        source: 'JOKEAPI.V2'
+    };
+}
+
+function pickLocalJoke() {
+    const item = LOCAL_JOKES[Math.floor(Math.random() * LOCAL_JOKES.length)];
+
+    return {
+        type: item.type,
+        category: item.category,
+        hash: '#0x' + item.id.toString(16).toUpperCase().padStart(2, '0') + '_' + item.category,
+        local: true,
+        source: 'LOCAL_ARCHIVE',
+        zh: item.zh,
+        en: item.en
     };
 }
 
@@ -550,14 +761,20 @@ async function getRandomJoke() {
     charTag.textContent = 'CURRENT: SCANNING.EXE';
 
     try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error('HTTP ' + response.status);
+        let joke;
+        if (Math.random() < LOCAL_JOKE_RATIO) {
+            joke = pickLocalJoke();
+        } else {
+            const response = await fetch(API_URL);
+            if (!response.ok) throw new Error('HTTP ' + response.status);
 
-        const data = await response.json();
-        if (data.error) throw new Error(data.message || 'API error');
+            const data = await response.json();
+            if (data.error) throw new Error(data.message || 'API error');
+            joke = normalizeJoke(data);
+        }
         if (seq !== activeSeq) return;
 
-        currentJoke = normalizeJoke(data);
+        currentJoke = joke;
 
         const nextChar = pickCharacter();
         triggerCharacterSwitch(nextChar);
@@ -565,7 +782,7 @@ async function getRandomJoke() {
         updatePortraitHint();
 
         const lang = getCurrentLanguage();
-        if (lang === 'zh') setStatus('translating');
+        if (lang === 'zh' && !joke.local) setStatus('translating');
 
         const packet = await resolveDisplayPacket(currentJoke, lang, seq);
         if (packet === null || seq !== activeSeq) return;
@@ -594,9 +811,17 @@ async function rerenderForLanguage() {
     const seq = ++activeSeq;
     const lang = getCurrentLanguage();
 
-    if (lang !== 'zh') {
+    if (!currentJoke.local && lang !== 'zh') {
         setStatus('ok');
         renderJoke(currentJoke);
+        return;
+    }
+
+    if (currentJoke.local) {
+        setStatus('ok');
+        const packet = await resolveDisplayPacket(currentJoke, lang, seq);
+        if (packet === null || seq !== activeSeq) return;
+        renderJoke(packet);
         return;
     }
 
@@ -623,7 +848,8 @@ function copyJoke() {
     const body = packet.type === 'twopart'
         ? packet.setup + '\n> ' + packet.delivery
         : packet.setup;
-    const text = body + '\n[via JOKEAPI.V2 // ' + packet.hash + ']';
+    const source = packet.source || 'JOKEAPI.V2';
+    const text = body + '\n[via ' + source + ' // ' + packet.hash + ']';
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text)

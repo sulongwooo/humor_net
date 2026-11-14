@@ -1,122 +1,168 @@
-# 😂 Random Joke Generator
+# HUMOR_NET — Random Joke Terminal
 
-A simple, fun web application that fetches and displays random jokes using the [Joke API](https://jokeapi.dev/).
+A retro terminal-style random joke machine with a bilingual interface, a curated local humor archive, and optional visitor statistics.
+
+**Live demo:** https://sulongwooo.github.io/humor_net/
+
+> 中文简介：一个复古终端风格的双语随机笑话机。70% 的笑话来自 JokeAPI，30% 来自本地精选库，包含冷笑话和名人幽默段子。支持中英文界面、复制笑话、隐藏快捷键 `F` 切换深浅色，以及可选的本地访客统计。
+
+## Preview
+
+### English UI
+
+![English UI](assets/preview-en.png)
+
+### 中文界面
+
+![中文界面](assets/preview-zh.png)
 
 ## Features
 
-- 🎲 **Random Joke Generator** - Fetches jokes from a public API
-- 📋 **Copy to Clipboard** - Share jokes easily with the share button
-- 🎨 **Beautiful UI** - Modern, responsive design
-- ⚡ **Fast & Lightweight** - No dependencies, pure HTML/CSS/JavaScript
-- 📱 **Mobile Friendly** - Works on all devices
+- **Two joke sources** — 70% JokeAPI / 30% curated local archive.
+- **Curated bilingual archive** — 20 hand-picked entries: 11 cold jokes and 9 celebrity humor anecdotes, each written in both Chinese and English.
+- **No machine translation for local jokes** — the curated archive reads naturally in either language.
+- **Chinese mode for API jokes** — JokeAPI content is translated on demand, with a MyMemory fallback if the primary translation endpoint fails.
+- **Retro terminal UI** — dot-matrix portrait, typewriter reveal, scanline background, and optional sound effects.
+- **Copy with attribution** — copied jokes include the source and packet ID, e.g. `[via LOCAL_ARCHIVE // #0x0D_CELEB]`.
+- **Hidden theme shortcut** — press `F` to switch between dark and light themes; no extra button is shown.
+- **No build step** — plain HTML, CSS, and JavaScript.
+- **Optional local server** — `server.js` adds cookie-based, deduplicated visitor statistics. No npm dependencies.
 
-## Demo
+## Joke Sources
 
-You can try the joke generator at: https://sulongwooo.github.io/humor_net/
+| Source | Share | Pool | Language handling |
+| --- | --- | --- | --- |
+| JokeAPI v2 | 70% | Default English pool, about 319 usable English jokes | Translated on demand in Chinese mode |
+| Local archive | 30% | 20 entries: 11 cold jokes + 9 celebrity anecdotes | Native Chinese and English |
 
-## How to Use
+For context, JokeAPI reports 1,368 jokes across all supported languages, but the default English pool is about 319. The site requests the English `Any` endpoint.
 
-1. Open `index.html` in your web browser
-2. Click the "Get a Joke" button to fetch a random joke
-3. Click the "Share Joke" button to copy the joke to your clipboard
-4. Repeat to get more jokes!
+The packet ID reveals the source type:
 
-## Installation
+- `#0x0A_COLD` — curated cold joke
+- `#0x0D_CELEB` — curated celebrity anecdote
+- `#0xD7_PUN` — JokeAPI category, in this case a pun
 
-### Local Setup
+## Quick Start
+
+### Static mode
 
 ```bash
-# Clone the repository
 git clone https://github.com/sulongwooo/humor_net.git
-
-# Navigate to the directory
 cd humor_net
-
-# Open index.html in your browser
 open index.html
 ```
 
-### GitHub Pages
+Or serve it with any static file server:
 
-1. Go to repository settings
-2. Navigate to Pages section
-3. Select `main` branch as source
-4. Your site will be available at `https://sulongwooo.github.io/humor_net/`
-
-## Technology Stack
-
-- **HTML5** - Structure
-- **CSS3** - Styling with animations
-- **JavaScript (ES6)** - Functionality
-- **Joke API** - External API for jokes
-
-## API Used
-
-This project uses the [Joke API v2](https://jokeapi.dev/) which provides:
-- Single-line jokes
-- Two-part jokes (setup + punchline)
-- Support for various categories
-
-## File Structure
-
+```bash
+python3 -m http.server 8080
 ```
+
+Then open <http://localhost:8080>.
+
+Static mode works for browsing jokes, copying, theming, and language switching. Visitor counts fall back to a per-browser local record because there is no backend.
+
+### Full local mode with visitor stats
+
+Requires Node.js 18 or newer.
+
+```bash
+node server.js
+```
+
+Open <http://localhost:8000>.
+
+The Node server adds:
+
+- A visitor cookie (`humor_net_visitor`) that deduplicates visits for 24 hours.
+- A disk log at `.visits.json` (gitignored).
+- A displayed count that starts at 1,566 (base value 1,565 plus the first visitor).
+
+Delete `.visits.json` and restart the server to reset local statistics.
+
+## How It Works
+
+1. On load or when you press `Space`, the app picks a joke.
+2. A random draw sends 70% of requests to JokeAPI and 30% to the local archive.
+3. JokeAPI responses keep their English setup and punchline. In Chinese mode, both parts are translated and cached for the current joke.
+4. Local archive entries already contain Chinese and English versions, so switching languages is instant and avoids translation drift.
+5. The joke is rendered character by character into the terminal card, then the source and packet ID are shown.
+
+## Visitor Stats
+
+The status bar can show cumulative visitors, but its behavior depends on where the site runs:
+
+- **Node server (`node server.js`)** — real aggregated counts from the local visit log, deduplicated per browser for 24 hours.
+- **GitHub Pages / static hosting** — `/api/visit` is unavailable, so the badge falls back to `base value + local visit days` on each browser. This is a local record, not a global total.
+
+This limitation is intentional and visible: the page never pretends that a static-hosted counter is a global audience measurement.
+
+## Keyboard Shortcuts
+
+| Key | Action |
+| --- | --- |
+| `Space` | Load another joke |
+| `F` | Toggle dark / light theme (hidden shortcut) |
+
+Language and sound can be switched from the top-right controls.
+
+## Project Structure
+
+```text
 humor_net/
-├── index.html      # Main HTML file
-├── style.css       # Styling
-├── script.js       # JavaScript logic
-├── README.md       # This file
-└── LICENSE         # MIT License
+├── index.html                 # Page structure and terminal layout
+├── style.css                  # Terminal theme, light theme, responsive layout
+├── script.js                  # Joke sources, translation, rendering, stats, shortcuts
+├── i18n.js                    # Chinese/English interface copy
+├── server.js                  # Optional Node server with visitor statistics
+├── assets/
+│   ├── preview-en.png         # English UI preview
+│   └── preview-zh.png         # Chinese UI preview
+├── GETTING_STARTED.md         # Detailed local setup
+├── GITHUB_PAGES_SETUP.md      # GitHub Pages deployment notes
+├── OPEN_WEBSITE.md            # Ways to open the site
+├── CONTRIBUTING.md
+├── CODE_OF_CONDUCT.md
+├── SECURITY.md
+├── ISSUE_TEMPLATE.md
+└── LICENSE
 ```
+
+## Tech Stack
+
+- HTML5, CSS3, and ES6+ JavaScript.
+- Canvas for the dot-matrix portrait.
+- [JokeAPI v2](https://jokeapi.dev/) for the external joke pool.
+- Google Translate's public endpoint for Chinese translation, with MyMemory as a fallback.
+- Node.js built-in modules only (`http`, `fs`, `path`, `crypto`) for the optional stats server.
+
+## Documentation
+
+- [Getting Started](GETTING_STARTED.md)
+- [GitHub Pages Setup](GITHUB_PAGES_SETUP.md)
+- [Open the Website](OPEN_WEBSITE.md)
+- [Contributing](CONTRIBUTING.md)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Issues and pull requests are welcome. For larger changes, open an issue first so the approach can be discussed.
 
-### Steps to Contribute
+1. Fork the repository.
+2. Create a feature branch.
+3. Make and test your change.
+4. Open a pull request with a short description.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+## Future Ideas
+
+- Category switch for the local archive: all / cold jokes / celebrity humor.
+- Joke history and favorites.
+- Offline cache for JokeAPI so the app can keep working when the API is unavailable.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Future Enhancements
-
-- [ ] Add joke categories filter
-- [ ] Implement joke history
-- [ ] Add favorites functionality
-- [ ] Dark mode theme
-- [ ] Multiple language support
-- [ ] Rate jokes (funny/not funny)
-- [ ] Social media sharing buttons
-
-## Troubleshooting
-
-### Joke not loading?
-- Check your internet connection
-- The Joke API might be temporarily unavailable
-- Try clearing your browser cache and reloading
-
-### Copy to clipboard not working?
-- Ensure your browser supports the Clipboard API
-- Try using the fallback method (should work automatically)
-
-## Author
-
-Created by [sulongwooo](https://github.com/sulongwooo)
-
-## Support
-
-If you enjoy this project, please consider:
-- ⭐ Starring the repository
-- 🐛 Reporting bugs
-- 💡 Suggesting features via Issues
-- 🤝 Contributing improvements
+MIT License. See [LICENSE](LICENSE).
 
 ---
 
-Made with ❤️ and laughter
+Created by [sulongwooo](https://github.com/sulongwooo).

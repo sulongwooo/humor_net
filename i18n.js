@@ -6,7 +6,7 @@
 const translations = {
     en: {
         title: 'RANDOM JOKE TERMINAL',
-        protocol: '[ PROTOCOL // JOKEAPI.V2 ]',
+        protocol: '[ PROTOCOL // JOKEAPI.V2 + LOCAL_ARCHIVE ]',
         heroTitle: 'RANDOM JOKE TERMINAL',
         heroSubtitle: 'DECENTRALIZED PUNCHLINES // LOW LATENCY LAUGHTER',
         statusOk: 'JOKE PACKET // RECEIVED',
@@ -32,7 +32,7 @@ const translations = {
     },
     zh: {
         title: '随机笑话终端',
-        protocol: '[ 协议 // JOKEAPI.V2 ]',
+        protocol: '[ 协议 // JOKEAPI.V2 + 本地幽默库 ]',
         heroTitle: '随机笑话终端',
         heroSubtitle: '去中心化笑话数据包 · 低延迟大笑传输',
         statusOk: '笑话数据包 // 接收成功',
