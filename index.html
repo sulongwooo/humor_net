@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RANDOM JOKE TERMINAL</title>
 
+    <script>
+        // Hidden theme preference (toggled with F); apply before paint to avoid a flash
+        try {
+            if (localStorage.getItem('humorNetTheme') === 'light') {
+                document.documentElement.classList.add('light');
+            }
+        } catch (err) {}
+    </script>
+
     <!-- Dot-matrix retro fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -95,7 +104,11 @@
     <footer class="statusbar">
         <span class="statusbar-brand" data-i18n="footerBrand">RANDOM_JOKE_TERMINAL // 1-BIT RETRO V3.2</span>
         <span class="statusbar-meta">
-            <span class="views-tag" id="views-tag">···</span>
+            <span class="views-badge" id="views-tag" title="">
+                <span class="views-dot" aria-hidden="true"></span>
+                <span class="views-label" id="views-label">HUMOR ENVOYS:</span>
+                <b class="views-count" id="views-count">···</b>
+            </span>
             <span id="status-clock">READY</span>
         </span>
     </footer>

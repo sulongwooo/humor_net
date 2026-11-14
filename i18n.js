@@ -25,8 +25,9 @@ const translations = {
         spaceHint: '[SPACE] NEXT',
         portraitStandby: 'BG DOT-MATRIX: STANDBY',
         portraitPrefix: 'BG DOT-MATRIX: ',
-        viewsUnit: 'VISITORS',
-        viewsOffline: 'OFFLINE',
+        viewsLabel: 'HUMOR ENVOYS:',
+        viewsOnlineTooltip: 'Today: {today} · Total: {total}',
+        viewsLocalTooltip: 'Local record: visited {n} day(s) in this browser (stats service offline)',
         footerBrand: 'RANDOM_JOKE_TERMINAL // 1-BIT RETRO V3.2'
     },
     zh: {
@@ -50,8 +51,9 @@ const translations = {
         spaceHint: '[空格] 换一个',
         portraitStandby: '背景点阵：待机中',
         portraitPrefix: '背景点阵角色：',
-        viewsUnit: '人浏览',
-        viewsOffline: '离线',
+        viewsLabel: '幽默使者抵达:',
+        viewsOnlineTooltip: '今日到访 {today} 位 · 累计 {total} 位',
+        viewsLocalTooltip: '本机记录：本机到访 {n} 天（未连接统计服务）',
         footerBrand: '随机笑话终端 // 1-BIT RETRO V3.2'
     }
 };

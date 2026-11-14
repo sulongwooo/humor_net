@@ -218,7 +218,8 @@ function resizeCanvas() {
 }
 
 function drawDotMatrixBackground() {
-    ctx.fillStyle = '#000000';
+    const lightTheme = isLightTheme();
+    ctx.fillStyle = lightTheme ? '#f4f4f5' : '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const matrix = currentChar ? currentChar.matrix : null;
@@ -243,18 +244,40 @@ function drawDotMatrixBackground() {
             }
 
             if (isCharPixel) {
-                ctx.fillStyle = 'rgba(204, 255, 0, ' + (0.14 * morphProgress) + ')';
+                ctx.fillStyle = lightTheme
+                    ? 'rgba(77, 102, 0, ' + (0.26 * morphProgress) + ')'
+                    : 'rgba(204, 255, 0, ' + (0.14 * morphProgress) + ')';
                 ctx.beginPath();
                 ctx.arc(x, y, DOT_RADIUS + 0.8, 0, Math.PI * 2);
                 ctx.fill();
             } else {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+                ctx.fillStyle = lightTheme ? 'rgba(24, 24, 27, 0.045)' : 'rgba(255, 255, 255, 0.035)';
                 ctx.beginPath();
                 ctx.arc(x, y, DOT_RADIUS, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
     }
+}
+
+/* ---------- Hidden theme toggle (F) ---------- */
+
+const THEME_KEY = 'humorNetTheme';
+
+function isLightTheme() {
+    return document.documentElement.classList.contains('light');
+}
+
+function applyTheme(mode) {
+    document.documentElement.classList.toggle('light', mode === 'light');
+    try {
+        localStorage.setItem(THEME_KEY, mode);
+    } catch (err) {}
+    drawDotMatrixBackground();
+}
+
+function toggleTheme() {
+    applyTheme(isLightTheme() ? 'dark' : 'light');
 }
 
 // Fade-in wipe when the background character changes
@@ -647,33 +670,74 @@ audioBtn.addEventListener('click', () => {
     }
 });
 
-/* ---------- Visitor counter (third-party, hits.sh badge) ---------- */
+/* ---------- Visitor stats (local stats service, per-browser fallback) ---------- */
 
-const VIEWS_BADGE_URL = 'https://hits.sh/sulongwooo.github.io/humor_net.svg?label=VIEWS&color=3f3f46&labelColor=18181b&style=flat-square';
-const viewsTag = document.getElementById('views-tag');
+const LOCAL_VISITS_KEY = 'humorNetVisitDays';
+const viewsBadge = document.getElementById('views-tag');
+const viewsLabel = document.getElementById('views-label');
+const viewsCount = document.getElementById('views-count');
 
-let viewsFailed = false;
+const VISITOR_BASE = 1565;   // displayed count starts at 1,566 (base + first visitor)
+let visitorStats = null;     // null = loading; otherwise server or local stats
+
+function countLocalVisit() {
+    // Count one visiting day per browser; refreshing on the same day adds nothing
+    const dayKey = new Date().toLocaleDateString('sv-SE');
+    let days = [];
+    try {
+        const stored = JSON.parse(localStorage.getItem(LOCAL_VISITS_KEY) || '[]');
+        if (Array.isArray(stored)) days = stored.filter((day) => typeof day === 'string');
+    } catch (err) {
+        days = [];
+    }
+    if (!days.includes(dayKey)) {
+        days.push(dayKey);
+        try {
+            localStorage.setItem(LOCAL_VISITS_KEY, JSON.stringify(days));
+        } catch (err) {}
+    }
+    return days.length;
+}
 
 function renderViewsLabel() {
-    if (viewsFailed) viewsTag.textContent = t('viewsOffline');
+    viewsLabel.textContent = t('viewsLabel');
+
+    if (!visitorStats) {
+        viewsCount.textContent = '···';
+        return;
+    }
+
+    if (visitorStats.mode === 'local') {
+        viewsCount.textContent = (VISITOR_BASE + visitorStats.days).toLocaleString();
+        viewsBadge.title = t('viewsLocalTooltip').replace('{n}', visitorStats.days);
+    } else {
+        const total = visitorStats.total.toLocaleString();
+        const today = visitorStats.today.toLocaleString();
+        viewsCount.textContent = total;
+        viewsBadge.title = t('viewsOnlineTooltip').replace('{total}', total).replace('{today}', today);
+    }
 }
 
-function renderViewsBadge() {
-    viewsFailed = false;
-    viewsTag.textContent = '';
-
-    const img = new Image();
-    img.className = 'views-badge';
-    img.alt = t('viewsUnit');
-    img.onerror = () => {
-        viewsFailed = true;
-        renderViewsLabel();
-    };
-    img.src = VIEWS_BADGE_URL;
-    viewsTag.appendChild(img);
+async function syncViews() {
+    try {
+        const response = await fetch('/api/visit', {
+            credentials: 'same-origin',
+            cache: 'no-store'
+        });
+        if (!response.ok) throw new Error('stats service unavailable');
+        const data = await response.json();
+        if (typeof data.visitors !== 'number' || typeof data.today !== 'number') {
+            throw new Error('invalid stats payload');
+        }
+        visitorStats = { mode: 'server', total: data.visitors, today: data.today };
+    } catch (error) {
+        // Static hosting (GitHub Pages): fall back to this browser's visiting days
+        visitorStats = { mode: 'local', days: countLocalVisit() };
+    }
+    renderViewsLabel();
 }
 
-renderViewsBadge();
+renderViewsLabel();
 
 /* ---------- Events ---------- */
 
@@ -714,6 +778,14 @@ window.addEventListener('jokeapp:langchange', () => {
 
 // Space / Enter fetches the next packet
 window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyF' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
+        const tagName = e.target && e.target.tagName;
+        if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' && !(e.target && e.target.isContentEditable)) {
+            toggleTheme();
+        }
+        return;
+    }
+
     if ((e.code === 'Space' || e.code === 'Enter') && e.target.tagName !== 'BUTTON') {
         e.preventDefault();
         playChirpTone();
@@ -741,5 +813,6 @@ window.addEventListener('load', () => {
     tickClock();
     resizeCanvas();
     updatePortraitHint();
+    syncViews();
     getRandomJoke();
 });

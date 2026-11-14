@@ -1,0 +1,3 @@
+# Local visitor stats log (contains IP addresses and user agents)
+.visits.json
+.visits.json.tmp

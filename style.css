@@ -376,14 +376,34 @@ body {
     gap: 14px;
 }
 
-.views-tag {
+.views-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-family: var(--font-mono);
+    font-size: inherit;
+    letter-spacing: normal;
+    line-height: 1.4;
     white-space: nowrap;
+    user-select: none;
 }
 
-.views-badge {
-    display: block;
-    height: 16px;
+.views-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2.5s ease-in-out infinite;
+}
+
+.views-label {
+    color: inherit;
+}
+
+.views-count {
+    color: inherit;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
 }
 
 .space-hint {
@@ -601,4 +621,134 @@ body {
         bottom: 16px;
         justify-content: center;
     }
+}
+
+/* ---------- Hidden light theme (toggled with F) ---------- */
+
+html.light body {
+    background-color: #f4f4f5;
+    color: #18181b;
+}
+
+html.light .crt-vignette {
+    background: radial-gradient(circle at 50% 50%, rgba(244, 244, 245, 0.12) 0%, rgba(244, 244, 245, 0.85) 100%);
+}
+
+html.light .topbar {
+    border-bottom-color: #e4e4e7;
+    background: rgba(255, 255, 255, 0.75);
+}
+
+html.light .logo-dot {
+    background: #4d6600;
+    box-shadow: none;
+}
+
+html.light .char-tag {
+    background: #ffffff;
+    border-color: #e4e4e7;
+    color: #71717a;
+}
+
+html.light .sfx-btn {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: #e4e4e7;
+}
+
+html.light .sfx-btn:hover {
+    color: #18181b;
+    border-color: #a1a1aa;
+}
+
+html.light .sfx-indicator {
+    background: #4d6600;
+}
+
+html.light .sfx-indicator.is-off {
+    background: #a1a1aa;
+}
+
+html.light .lang-switch {
+    background: #ffffff;
+    border-color: #e4e4e7;
+}
+
+html.light .lang-switch button:hover {
+    color: #18181b;
+}
+
+html.light .protocol {
+    color: #4d6600;
+}
+
+html.light .terminal {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: #d4d4d8;
+}
+
+html.light .terminal-status {
+    border-bottom-color: #e4e4e7;
+}
+
+html.light #terminal-badge {
+    color: #18181b;
+}
+
+html.light .joke-id {
+    color: #52525b;
+}
+
+html.light .joke-line {
+    color: #18181b;
+}
+
+html.light .joke-line.is-error {
+    color: #d93036;
+}
+
+html.light .joke-line--punch {
+    color: #4d6600;
+}
+
+html.light .cursor-blink {
+    background: #4d6600;
+}
+
+html.light .terminal-foot {
+    color: #52525b;
+    border-top-color: #e4e4e7;
+}
+
+html.light .space-hint {
+    color: #4d6600;
+    opacity: 0.8;
+}
+
+html.light .btn-primary {
+    box-shadow: 0 0 24px rgba(77, 102, 0, 0.2);
+}
+
+html.light .btn-ghost {
+    background: #ffffff;
+    color: #18181b;
+    border-color: #d4d4d8;
+}
+
+html.light .btn-ghost:hover {
+    background: #f4f4f5;
+    border-color: #a1a1aa;
+}
+
+html.light .status-dot {
+    background: #4d6600;
+}
+
+html.light .status-dot.is-error {
+    background: #d93036;
+    box-shadow: none;
+}
+
+html.light .statusbar {
+    border-top-color: #e4e4e7;
+    background: rgba(255, 255, 255, 0.7);
 }
