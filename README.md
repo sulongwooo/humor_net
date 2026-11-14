@@ -12,7 +12,7 @@ A simple, fun web application that fetches and displays random jokes using the [
 
 ## Demo
 
-You can try the joke generator at: [GitHub Pages URL - add after enabling]
+You can try the joke generator at: https://sulongwooo.github.io/humor_net/
 
 ## How to Use
 
@@ -27,10 +27,10 @@ You can try the joke generator at: [GitHub Pages URL - add after enabling]
 
 ```bash
 # Clone the repository
-git clone https://github.com/sulongwooo/random-joke-generator.git
+git clone https://github.com/sulongwooo/humor_net.git
 
 # Navigate to the directory
-cd random-joke-generator
+cd humor_net
 
 # Open index.html in your browser
 open index.html
@@ -41,7 +41,7 @@ open index.html
 1. Go to repository settings
 2. Navigate to Pages section
 3. Select `main` branch as source
-4. Your site will be available at `https://sulongwooo.github.io/random-joke-generator/`
+4. Your site will be available at `https://sulongwooo.github.io/humor_net/`
 
 ## Technology Stack
 
@@ -60,7 +60,7 @@ This project uses the [Joke API v2](https://jokeapi.dev/) which provides:
 ## File Structure
 
 ```
-random-joke-generator/
+humor_net/
 ├── index.html      # Main HTML file
 ├── style.css       # Styling
 ├── script.js       # JavaScript logic

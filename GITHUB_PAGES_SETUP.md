@@ -5,7 +5,7 @@ Your Random Joke Generator is now ready to be hosted on **GitHub Pages** - compl
 ## 🚀 Enable GitHub Pages in 3 Easy Steps:
 
 ### Step 1: Go to Repository Settings
-1. Navigate to: https://github.com/sulongwooo/random-joke-generator/settings
+1. Navigate to: https://github.com/sulongwooo/humor_net/settings
 2. Click on **Settings** tab at the top
 
 ### Step 2: Find Pages Section
@@ -22,7 +22,7 @@ Your Random Joke Generator is now ready to be hosted on **GitHub Pages** - compl
 
 Once deployed, your website will be available at:
 ```
-https://sulongwooo.github.io/random-joke-generator/
+https://sulongwooo.github.io/humor_net/
 ```
 
 ## 🔄 How It Works
@@ -42,7 +42,7 @@ You can check deployment status at:
 
 Once live, you can share the link:
 ```
-https://sulongwooo.github.io/random-joke-generator/
+https://sulongwooo.github.io/humor_net/
 ```
 
 ## 📌 Tips

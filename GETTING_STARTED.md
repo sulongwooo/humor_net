@@ -8,10 +8,10 @@ Welcome to the Random Joke Generator project! This guide will help you get start
 
 ```bash
 # Clone the repository
-git clone https://github.com/sulongwooo/random-joke-generator.git
+git clone https://github.com/sulongwooo/humor_net.git
 
 # Navigate to the directory
-cd random-joke-generator
+cd humor_net
 
 # Open in your browser
 open index.html
@@ -22,7 +22,7 @@ start index.html  # Windows
 ### Option 2: Use GitHub Pages
 
 The project is available online at:
-`https://sulongwooo.github.io/random-joke-generator/`
+`https://sulongwooo.github.io/humor_net/`
 
 ## How It Works
 
@@ -84,7 +84,7 @@ fetch('https://v2.jokeapi.dev/joke/Any?type=single')
 ## Project Structure
 
 ```
-random-joke-generator/
+humor_net/
 ├── index.html           # Main HTML file
 ├── style.css            # CSS styling and animations
 ├── script.js            # JavaScript functionality

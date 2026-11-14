@@ -48,7 +48,7 @@ Then open: `http://localhost:8000`
 1. Go to repository settings
 2. Navigate to "Pages"
 3. Select `main` branch
-4. Your site will be live at: `https://sulongwooo.github.io/random-joke-generator/`
+4. Your site will be live at: `https://sulongwooo.github.io/humor_net/`
 
 ## 🎯 Recommended: Method 1 (Simplest)
 
