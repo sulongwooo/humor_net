@@ -381,6 +381,11 @@ body {
     white-space: nowrap;
 }
 
+.views-badge {
+    display: block;
+    height: 16px;
+}
+
 .space-hint {
     color: rgba(204, 255, 0, 0.8);
     font-family: var(--font-mono);

@@ -647,61 +647,33 @@ audioBtn.addEventListener('click', () => {
     }
 });
 
-/* ---------- Visitor counter (server-side, unique browsers) ---------- */
+/* ---------- Visitor counter (third-party, hits.sh badge) ---------- */
 
-const VIEWER_ID_KEY = 'jokeAppVisitorId';
+const VIEWS_BADGE_URL = 'https://hits.sh/sulongwooo.github.io/humor_net.svg?label=VIEWS&color=3f3f46&labelColor=18181b&style=flat-square';
 const viewsTag = document.getElementById('views-tag');
 
-let visitorsCount = null;   // null = counter API unavailable (e.g. static hosting)
-let viewsLoading = true;
-
-function newVisitorId() {
-    if (window.crypto && typeof crypto.randomUUID === 'function') {
-        return 'v' + crypto.randomUUID();
-    }
-    return 'v' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-
-function getVisitorId() {
-    let id = localStorage.getItem(VIEWER_ID_KEY);
-    if (!id) {
-        id = newVisitorId();
-        localStorage.setItem(VIEWER_ID_KEY, id);
-    }
-    return id;
-}
+let viewsFailed = false;
 
 function renderViewsLabel() {
-    if (viewsLoading) {
-        viewsTag.textContent = '···';
-    } else if (visitorsCount === null) {
-        viewsTag.textContent = t('viewsOffline');
-    } else {
-        viewsTag.textContent = visitorsCount.toLocaleString() + ' ' + t('viewsUnit');
-    }
+    if (viewsFailed) viewsTag.textContent = t('viewsOffline');
 }
 
-async function syncViews() {
-    try {
-        const response = await fetch('/api/views', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ visitor: getVisitorId() })
-        });
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const data = await response.json();
-        if (typeof data.count !== 'number') throw new Error('bad payload');
-        visitorsCount = data.count;
-    } catch (error) {
-        // No counter backend (static hosting): show OFFLINE rather than a made-up number
-        visitorsCount = null;
-        console.warn('View counter unavailable:', error.message);
-    }
-    viewsLoading = false;
-    renderViewsLabel();
+function renderViewsBadge() {
+    viewsFailed = false;
+    viewsTag.textContent = '';
+
+    const img = new Image();
+    img.className = 'views-badge';
+    img.alt = t('viewsUnit');
+    img.onerror = () => {
+        viewsFailed = true;
+        renderViewsLabel();
+    };
+    img.src = VIEWS_BADGE_URL;
+    viewsTag.appendChild(img);
 }
 
-renderViewsLabel();
+renderViewsBadge();
 
 /* ---------- Events ---------- */
 
@@ -769,6 +741,5 @@ window.addEventListener('load', () => {
     tickClock();
     resizeCanvas();
     updatePortraitHint();
-    syncViews();
     getRandomJoke();
 });
