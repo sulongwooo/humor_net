@@ -26,6 +26,7 @@ const translations = {
         portraitStandby: 'BG DOT-MATRIX: STANDBY',
         portraitPrefix: 'BG DOT-MATRIX: ',
         viewsLabel: 'HUMOR ENVOYS:',
+        viewsGlobalTooltip: 'Shared counter across browsers · Total: {total}',
         viewsOnlineTooltip: 'Today: {today} · Total: {total}',
         viewsLocalTooltip: 'Local record: visited {n} day(s) in this browser (stats service offline)',
         footerBrand: 'RANDOM_JOKE_TERMINAL // 1-BIT RETRO V3.2'
@@ -52,6 +53,7 @@ const translations = {
         portraitStandby: '背景点阵：待机中',
         portraitPrefix: '背景点阵角色：',
         viewsLabel: '幽默使者抵达:',
+        viewsGlobalTooltip: '全球共享计数 · 累计 {total} 位访客',
         viewsOnlineTooltip: '今日到访 {today} 位 · 累计 {total} 位',
         viewsLocalTooltip: '本机记录：本机到访 {n} 天（未连接统计服务）',
         footerBrand: '随机笑话终端 // 1-BIT RETRO V3.2'

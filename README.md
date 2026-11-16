@@ -24,7 +24,7 @@ A retro terminal-style random joke machine with a bilingual interface, a curated
 - **Copy with attribution** — copied jokes include the source and packet ID, e.g. `[via LOCAL_ARCHIVE // #0x0D_CELEB]`.
 - **Hidden theme shortcut** — press `F` to switch between dark and light themes; no extra button is shown.
 - **No build step** — plain HTML, CSS, and JavaScript.
-- **Optional local server** — `server.js` adds cookie-based, deduplicated visitor statistics. No npm dependencies.
+- **Shared visitor counter** — one public counter shared across browsers, deduplicated per browser for 24 hours. `server.js` remains available as a local fallback with no npm dependencies.
 
 ## Joke Sources
 
@@ -59,7 +59,7 @@ python3 -m http.server 8080
 
 Then open <http://localhost:8080>.
 
-Static mode works for browsing jokes, copying, theming, and language switching. Visitor counts fall back to a per-browser local record because there is no backend.
+Static mode works for browsing jokes, copying, theming, and language switching. Visitor counts still use the shared public counter, so they are cumulative across browsers even without a backend.
 
 ### Full local mode with visitor stats
 
@@ -89,12 +89,11 @@ Delete `.visits.json` and restart the server to reset local statistics.
 
 ## Visitor Stats
 
-The status bar can show cumulative visitors, but its behavior depends on where the site runs:
+The status bar shows a shared visitor count, deduplicated per browser for 24 hours:
 
-- **Node server (`node server.js`)** — real aggregated counts from the local visit log, deduplicated per browser for 24 hours.
-- **GitHub Pages / static hosting** — `/api/visit` is unavailable, so the badge falls back to `base value + local visit days` on each browser. This is a local record, not a global total.
-
-This limitation is intentional and visible: the page never pretends that a static-hosted counter is a global audience measurement.
+- **Shared counter (primary)** — a public Abacus counter works on GitHub Pages and local hosts alike. It was initialized at 1,565, so the first counted visitor sees 1,566. Different browsers increment the same total; refreshing the same browser does not.
+- **Node server (`node server.js`, fallback)** — if the shared counter is unreachable, the app falls back to the local visit log when the server is running.
+- **Per-browser record (last resort)** — if both services are unavailable, the badge shows `base value + local visit days`. This is a local record, not a global total.
 
 ## Keyboard Shortcuts
 

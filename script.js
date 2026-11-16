@@ -896,15 +896,20 @@ audioBtn.addEventListener('click', () => {
     }
 });
 
-/* ---------- Visitor stats (local stats service, per-browser fallback) ---------- */
+/* ---------- Visitor stats (shared counter, local server and per-browser fallbacks) ---------- */
 
 const LOCAL_VISITS_KEY = 'humorNetVisitDays';
+const GLOBAL_VISIT_KEY = 'humorNetGlobalVisitAt';
+const GLOBAL_VISIT_WINDOW = 24 * 60 * 60 * 1000;
+const GLOBAL_COUNTER_BASE = 'https://abacus.jasoncameron.dev';
+const GLOBAL_COUNTER_NAMESPACE = 'sulongwooo.github.io';
+const GLOBAL_COUNTER_KEY = 'humor-net-visitors';
 const viewsBadge = document.getElementById('views-tag');
 const viewsLabel = document.getElementById('views-label');
 const viewsCount = document.getElementById('views-count');
 
 const VISITOR_BASE = 1565;   // displayed count starts at 1,566 (base + first visitor)
-let visitorStats = null;     // null = loading; otherwise server or local stats
+let visitorStats = null;     // null = loading; otherwise global, server, or local stats
 
 function countLocalVisit() {
     // Count one visiting day per browser; refreshing on the same day adds nothing
@@ -925,6 +930,34 @@ function countLocalVisit() {
     return days.length;
 }
 
+function readGlobalVisitAt() {
+    try {
+        return Number(localStorage.getItem(GLOBAL_VISIT_KEY)) || 0;
+    } catch (error) {
+        return 0;
+    }
+}
+
+function markGlobalVisit() {
+    try {
+        localStorage.setItem(GLOBAL_VISIT_KEY, String(Date.now()));
+    } catch (error) {}
+}
+
+async function fetchGlobalVisitorStats() {
+    // The shared counter is incremented once per browser every 24 hours.
+    const lastVisitAt = readGlobalVisitAt();
+    const shouldCount = !lastVisitAt || Date.now() - lastVisitAt >= GLOBAL_VISIT_WINDOW;
+    const action = shouldCount ? 'hit' : 'get';
+    const url = `${GLOBAL_COUNTER_BASE}/${action}/${GLOBAL_COUNTER_NAMESPACE}/${GLOBAL_COUNTER_KEY}`;
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error('global counter unavailable');
+    const data = await response.json();
+    if (!Number.isFinite(data.value)) throw new Error('invalid global counter payload');
+    if (shouldCount) markGlobalVisit();
+    return { mode: 'global', total: data.value };
+}
+
 function renderViewsLabel() {
     viewsLabel.textContent = t('viewsLabel');
 
@@ -936,6 +969,10 @@ function renderViewsLabel() {
     if (visitorStats.mode === 'local') {
         viewsCount.textContent = (VISITOR_BASE + visitorStats.days).toLocaleString();
         viewsBadge.title = t('viewsLocalTooltip').replace('{n}', visitorStats.days);
+    } else if (visitorStats.mode === 'global') {
+        const total = visitorStats.total.toLocaleString();
+        viewsCount.textContent = total;
+        viewsBadge.title = t('viewsGlobalTooltip').replace('{total}', total);
     } else {
         const total = visitorStats.total.toLocaleString();
         const today = visitorStats.today.toLocaleString();
@@ -946,19 +983,23 @@ function renderViewsLabel() {
 
 async function syncViews() {
     try {
-        const response = await fetch('/api/visit', {
-            credentials: 'same-origin',
-            cache: 'no-store'
-        });
-        if (!response.ok) throw new Error('stats service unavailable');
-        const data = await response.json();
-        if (typeof data.visitors !== 'number' || typeof data.today !== 'number') {
-            throw new Error('invalid stats payload');
+        visitorStats = await fetchGlobalVisitorStats();
+    } catch (globalError) {
+        try {
+            const response = await fetch('/api/visit', {
+                credentials: 'same-origin',
+                cache: 'no-store'
+            });
+            if (!response.ok) throw new Error('stats service unavailable');
+            const data = await response.json();
+            if (typeof data.visitors !== 'number' || typeof data.today !== 'number') {
+                throw new Error('invalid stats payload');
+            }
+            visitorStats = { mode: 'server', total: data.visitors, today: data.today };
+        } catch (serverError) {
+            // No shared counter and no local server: use this browser's visiting days
+            visitorStats = { mode: 'local', days: countLocalVisit() };
         }
-        visitorStats = { mode: 'server', total: data.visitors, today: data.today };
-    } catch (error) {
-        // Static hosting (GitHub Pages): fall back to this browser's visiting days
-        visitorStats = { mode: 'local', days: countLocalVisit() };
     }
     renderViewsLabel();
 }
